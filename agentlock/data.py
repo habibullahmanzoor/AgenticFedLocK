@@ -82,6 +82,15 @@ def set_global_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+    if os.environ.get("AGENTICFEDLOCK_DETERMINISTIC") == "1":
+        # Opt-in only: the runs reported in the paper did not set this, and
+        # cuDNN's algorithm choice is one documented source of the seed-to-seed
+        # ASR variance discussed in the paper (Sec. 7.3.2). Enabling this makes
+        # repeated GPU runs of the *same* seed on the *same* machine consistent
+        # with each other; it does not reproduce the paper's exact published
+        # numbers, since those runs did not have it enabled.
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 def _dirichlet_partition(

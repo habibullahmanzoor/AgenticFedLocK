@@ -64,6 +64,15 @@ python run_benchmark.py \
 
 Run `python run_benchmark.py --help` for the full list of supported strategies, attack modes, and datasets.
 
+## Reproducibility notes
+
+Running this code with the same seeds and protocol will reproduce the same **qualitative** findings (AgenticFedLock dominating on EMNIST Balanced/CIFAR-10 under model replacement, competitive with FLTrust/FLAME on MNIST/Fashion-MNIST, the shared weakness against adaptive mimic on EMNIST/CIFAR-10, and the ~60–67% communication savings), but it will not reproduce the paper's tables to the exact decimal, for reasons the paper itself discloses (Sec. 7.3.2, "Seed-to-seed variance"):
+
+- **GPU/cuDNN nondeterminism.** By default, this code does not force deterministic cuDNN kernels, so even *re-running the same seed on the same machine* shifts results — the paper measures this shift at "several ASR points" on EMNIST. Several headline cells already have wide spread across just 3 seeds in the reported tables themselves (e.g. CIFAR-10 model-replacement AgenticFedLock: 26.07% ± 17.20% ASR, from per-seed values of 42.4% / 8.1% / 27.8%); a fresh run can land anywhere in a similarly wide band.
+- Set the environment variable `AGENTICFEDLOCK_DETERMINISTIC=1` before running to enable `torch.backends.cudnn.deterministic`. This makes repeated runs on *your* machine consistent with each other; it was **not** set for the paper's own runs, so it does not make a re-run match the published numbers either — it only removes one additional source of variance on top of the seed-level one above.
+- Secondary factors: PyTorch/CUDA/driver version differences across machines, and `prepare_datasets.py` pulling from external mirrors (NIST, a GitHub media mirror, a University of Toronto mirror) that are stable but outside this project's control.
+- Python/NumPy/scikit-learn-level randomness (client partitioning, non-IID splits, data subsampling) is fully seeded via `set_global_seed()` in `agentlock/data.py` and does not vary between runs.
+
 ## Repository scope
 
 This repository contains the framework code and experiment drivers only. It does **not** include raw dataset files, run output logs, or the manuscript sources — those are excluded by `.gitignore` (`data/`, `outputs/`) or simply not part of the code release. `prepare_datasets.py` reconstructs the expected `data/` layout locally.
