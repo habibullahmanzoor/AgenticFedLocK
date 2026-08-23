@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# Local datasets (place under data/, see README)
+data/*
+!data/README.txt
+
+# Run outputs (summary JSON, per-round CSV, logs)
+outputs/*
+!outputs/README.txt
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Python envs
+venv/
+.venv/
+env/

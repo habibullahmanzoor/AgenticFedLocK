@@ -1,0 +1,108 @@
+"""Risk-fusion-order ablation: per-signal recentering before fusion vs. fuse-then-recenter.
+
+This paper's mechanism section argues that recentering each structural risk
+signal (SLRT, CAR, norm-inflation) against its own round median BEFORE
+max-fusion prevents a saturated, non-discriminative angular signal from
+swamping a genuinely bimodal one (norm-inflation) -- and that the
+alternative (fuse raw signals first, recenter only the fused result) was
+tried and rejected for exactly this reason. That claim was argued narratively
+but never tested directly in a controlled ablation. This ablation tests it.
+
+`risk_fusion_order=recenter_then_fuse` is the standing default and already
+exists as `cifar10_seed{N}_agentlock` -- reused, not rerun. Only
+`fuse_then_recenter` needs fresh runs.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+RUNS_DIR = Path(__file__).resolve().parent / "runs"
+PYTHON = sys.executable
+SEEDS = [7, 11, 19]
+
+CIFAR10_ARGS = [
+    "--num-clients", "30", "--rounds", "100", "--client-fraction", "0.33",
+    "--local-epochs", "3", "--batch-size", "64", "--lr", "0.001",
+    "--lr-schedule", "cosine", "--lr-min", "0.00005", "--optimizer", "adam",
+    "--model-family", "cnn", "--channel-dims", "32,64", "--cnn-hidden-dim", "128",
+    "--cnn-variant", "residual", "--image-augmentation",
+    "--backdoor-target", "2", "--rare-labels", "0,1", "--probe-fraction", "0.08",
+]
+
+COMMON_ARGS = [
+    "--device", "cuda",
+    "--dirichlet-alpha", "0.4",
+    "--malicious-fraction", "0.2",
+    "--poison-fraction", "0.3",
+    "--attack-mode", "model_replacement",
+    "--data-fraction", "0.5",
+    "--defender-knowledge", "unknown",
+    "--rarity-information-mode", "probe_feedback",
+    "--min-client-size", "18",
+    "--test-fraction", "0.25",
+    "--fedprox-mu", "0.01",
+    "--skip-baseline",
+    "--strategy", "agentlock",
+    "--repair-signal-mode", "subspace_consensus",
+    "--trust-consensus-fraction", "0.5",
+    "--root-anchor-weight", "0.7",
+    "--risk-fusion-order", "fuse_then_recenter",
+]
+
+
+def run_one(seed: int) -> None:
+    out_dir = RUNS_DIR / f"cifar10_seed{seed}_fuse_then_recenter"
+    summary_path = out_dir / "agentlock_summary.json"
+    if summary_path.exists():
+        print(f"[skip] seed={seed} (already done)", flush=True)
+        return
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        PYTHON, str(REPO_ROOT / "run_digits_experiment.py"),
+        "--dataset", "cifar10_local",
+        "--seed", str(seed),
+        "--results-dir", str(out_dir),
+        *COMMON_ARGS,
+        *CIFAR10_ARGS,
+    ]
+
+    print(f"[start] seed={seed}", flush=True)
+    started = time.time()
+    with open(out_dir / "stdout.log", "w", encoding="utf-8") as stdout_f, \
+         open(out_dir / "stderr.log", "w", encoding="utf-8") as stderr_f:
+        result = subprocess.run(cmd, cwd=str(REPO_ROOT), stdout=stdout_f, stderr=stderr_f)
+    elapsed = time.time() - started
+
+    if result.returncode != 0:
+        print(f"[FAIL] seed={seed} exit={result.returncode} elapsed={elapsed:.0f}s "
+              f"-- see {out_dir}/stderr.log", flush=True)
+        return
+
+    try:
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        print(f"[done] seed={seed} elapsed={elapsed:.0f}s "
+              f"ASR={summary.get('final_asr')} clean={summary.get('final_clean_accuracy')} "
+              f"rare={summary.get('final_rare_accuracy')} bytes={summary.get('mean_byte_communication_ratio')}",
+              flush=True)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[done, no summary readback] seed={seed} elapsed={elapsed:.0f}s ({exc})", flush=True)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seeds", type=int, nargs="+", default=SEEDS)
+    args = parser.parse_args()
+    for seed in args.seeds:
+        run_one(seed)
+    print(f"=== risk-fusion-order ablation complete (seeds={args.seeds}) ===", flush=True)
+
+
+if __name__ == "__main__":
+    main()
