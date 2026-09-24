@@ -117,7 +117,7 @@ If you use this code, please cite:
   author  = {Manzoor, Habib Ullah and Manzoor, Sanaullah and Arshad, Kamran and Assaleh, Khaled and Imran, Muhammad and Zoha, Ahmed},
   journal = {AI Open},
   year    = {2026},
-  note    = {Under review}
+  note    = {Accepted}
 }
 ```
 
