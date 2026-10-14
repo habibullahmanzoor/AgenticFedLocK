@@ -112,12 +112,18 @@ This repository contains the framework code and experiment drivers only. It does
 If you use this code, please cite:
 
 ```bibtex
-@article{manzoor2026agenticfedlock,
-  title   = {AgenticFedLock: Trust-Conditioned Multi-Role Agentic Control for Robust and Communication-Efficient Federated Learning},
-  author  = {Manzoor, Habib Ullah and Manzoor, Sanaullah and Arshad, Kamran and Assaleh, Khaled and Imran, Muhammad and Zoha, Ahmed},
-  journal = {AI Open},
-  year    = {2026},
-  note    = {Accepted}
+@article{MANZOOR2026289,
+title = {AgenticFedLock: Trust-conditioned multi-role agentic control for robust and communication-efficient federated learning},
+journal = {AI Open},
+volume = {7},
+pages = {289-312},
+year = {2026},
+issn = {2666-6510},
+doi = {https://doi.org/10.1016/j.aiopen.2026.09.002},
+url = {https://www.sciencedirect.com/science/article/pii/S2666651026000185},
+author = {Habib Ullah Manzoor and Sanaullah Manzoor and Kamran Arshad and Khaled Assaleh and Muhammad Imran and Ahmed Zoha},
+keywords = {Agentic AI, Federated learning, Cybersecurity, Efficient Communication},
+abstract = {Federated learning (FL) enables collaborative training across decentralized devices, but under non-IID data it faces a persistent tension between adversarial robustness, communication efficiency, and utility on rare classes. We present AgenticFedLock, a trust-conditioned FL framework that treats robustness as sequential control of trainable parameter-space geometry through a hierarchical server-side protocol controller. Its four coordinated agents estimate client state, select participants, allocate trainable subspaces, and evaluate or repair risky updates. The Judge-Repair agent’s backdoor-risk signal is trigger-agnostic by construction: it fuses subspace-localized root-cosine deviation, trusted-consensus deviation, and norm-inflation detection, none of which use trigger or target information, combined with a norm-confidence-gated root-anchor reweighting at aggregation. This signal is verified to trigger repair in the large majority of completed rounds under an unknown-defender setting, with no dependence on privileged knowledge of the attack. Across a matched three-seed, five-method, four-dataset, two-attack unknown-defender comparison, the controller reduces model-replacement attack success to 15.6±6.2% on EMNIST Balanced and 26.1±17.2% on CIFAR-10, where FedAvg, FLTrust, FLAME, and RFA all remain above 90%; on MNIST and Fashion-MNIST it is competitive with the strongest baselines under both attacks studied. It does so while transmitting 60%–67% of protocol bytes against 100% for every full-model comparator. Beyond suppressing the attack’s effect, the same persistent per-client state lets the controller identify which clients are malicious with near-perfect accuracy under model replacement (suspicion-score AUC 0.999–1.000, reaching near-ceiling separation within the first few rounds), a capability the compared robust-aggregation baselines do not expose since none of them persist an identity-linked judgment across rounds; this attribution collapses to near-chance under the camouflaged adaptive-mimic attack. Matched ablation, sensitivity, defender-knowledge, and systems-cost results accompany these findings, including the cases where the mechanism does not close the gap.}
 }
 ```
 
